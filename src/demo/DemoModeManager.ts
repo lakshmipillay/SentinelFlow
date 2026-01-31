@@ -14,6 +14,7 @@ import { DemoScenarioGenerator } from './scenarios/DemoScenarioGenerator';
 import { DemoDataGenerator } from './data-generators/DemoDataGenerator';
 import { DemoStateManager } from './DemoStateManager';
 import { DemoIsolationService, getDemoIsolationService, BlockedCallRecord } from './DemoIsolationService';
+import { AuditArtifactService } from '../services/AuditArtifactService';
 
 export class DemoModeManager extends EventEmitter {
   private isActive: boolean = false;
@@ -22,6 +23,7 @@ export class DemoModeManager extends EventEmitter {
   private dataGenerator: DemoDataGenerator;
   private stateManager: DemoStateManager;
   private isolationService: DemoIsolationService;
+  private auditArtifactService: AuditArtifactService;
   private config: DemoConfig;
 
   constructor(config?: Partial<DemoConfig>) {
@@ -50,6 +52,7 @@ export class DemoModeManager extends EventEmitter {
     this.dataGenerator = new DemoDataGenerator();
     this.stateManager = new DemoStateManager();
     this.isolationService = getDemoIsolationService();
+    this.auditArtifactService = new AuditArtifactService('AUDIT.md');
 
     // Forward events from isolation service
     this.isolationService.on('externalCallBlocked', (blockedCall: BlockedCallRecord) => {
@@ -851,10 +854,11 @@ export class DemoModeManager extends EventEmitter {
   }
 
   /**
-   * Generate demo audit event
+   * Generate demo audit event and write to AUDIT.md
    */
   private generateDemoAuditEvent(eventType: string, details: any): void {
     const sessionId = this.currentSession?.sessionId || 'unknown-session';
+    const workflowId = details.workflowId || sessionId;
     
     const auditEvent = {
       eventId: uuidv4(),
@@ -869,6 +873,20 @@ export class DemoModeManager extends EventEmitter {
 
     this.stateManager.addAuditEvent(auditEvent);
     this.emit('demoAuditEvent', auditEvent);
+    
+    // Also write to AUDIT.md for persistent audit trail
+    this.auditArtifactService.generateAuditEvent(
+      workflowId,
+      'state_transition', // Use state_transition as generic event type
+      'orchestrator', // Use orchestrator as actor for demo events
+      {
+        demoEventType: eventType,
+        ...details,
+        demoMode: true
+      }
+    ).catch(err => {
+      console.error('Failed to write demo audit event to AUDIT.md:', err);
+    });
   }
 
   /**
