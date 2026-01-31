@@ -4,7 +4,7 @@
  * Implements comprehensive audit artifact generation system with:
  * - Structured audit event creation for all workflow activities
  * - Immutable audit trail storage with complete context capture
- * - DEVLOG.md integration as canonical audit trail
+ * - AUDIT.md integration as canonical audit trail
  * - Machine-readable audit artifacts suitable for compliance review
  * 
  * Validates Requirements 10.1, 10.2, 10.3, 10.4, 10.5
@@ -14,7 +14,7 @@
  * - All workflow decisions and state changes generate audit events
  * - Complete context capture including skills, confidence, and rationale
  * - Immutable audit records with cryptographic integrity
- * - DEVLOG.md serves as canonical, machine-readable audit trail
+ * - AUDIT.md serves as canonical, machine-readable audit trail
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -239,7 +239,7 @@ export interface DevlogAuditEntry {
  */
 export class AuditArtifactService extends EventEmitter {
   private auditChain: Map<string, EnhancedAuditEvent[]> = new Map();
-  private devlogPath: string = 'DEVLOG.md';
+  private devlogPath: string = 'AUDIT.md';
   private auditMetrics: Map<string, {
     totalEvents: number;
     stateTransitions: number;
@@ -565,7 +565,7 @@ export class AuditArtifactService extends EventEmitter {
       });
 
     } catch (error) {
-      console.error('Failed to update DEVLOG.md:', error);
+      console.error('Failed to update AUDIT.md:', error);
       // Don't throw - audit should not fail workflow
     }
   }
@@ -879,12 +879,12 @@ ${JSON.stringify(entry.details, null, 2)}
    * Create initial DEVLOG content structure
    */
   private createInitialDevlogContent(): string {
-    return `# DEVLOG – SentinelFlow
+    return `# SentinelFlow Audit Trail
 
-This log documents the development process, key decisions,
-and iteration history for the SentinelFlow project.
+This file contains the machine-readable audit trail for SentinelFlow workflow executions.
+Each entry represents an immutable audit event with complete context capture.
 
-The focus is on process transparency rather than feature volume.
+For development notes and decisions, see [DEVLOG.md](./DEVLOG.md).
 
 ---
 

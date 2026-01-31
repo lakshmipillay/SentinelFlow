@@ -1,7 +1,9 @@
 # SentinelFlow
 
-SentinelFlow is a **governed, deterministic agentic workflow system** built using Kiro.
+SentinelFlow is a **governed, deterministic agentic workflow system**, built for the Dynamous Kiro Hackathon using the Kiro IDE.
+
 It demonstrates how AI agents can be orchestrated safely for **incident response and SDLC decision-making** by prioritizing governance, auditability, and clear separation of responsibilities.
+It assists SRE, Security, and Governance teams without autonomous execution, using explicit orchestration, mandatory approval gates, and human-in-the-loop control.
 
 Unlike conversational AI tools, SentinelFlow treats AI as an **operational system**, not a chatbot.
 
@@ -36,6 +38,19 @@ All steps are deterministic, auditable, and visualized in real-time.
 
 ---
 
+## Why SentinelFlow
+
+Most AI incident response tools optimize for speed and automation, often at the cost of clarity, governance, and auditability.
+SentinelFlow optimizes for:
+- Safety over speed
+- Governance before action
+- Explicit roles over autonomous agents
+- Deterministic workflows over conversational AI
+It answers a different question:
+**How should AI participate in safety-critical engineering decisions?**
+
+---
+
 ## Key Design Principles
 
 - **Workflow over conversation** — Deterministic processes, not chat
@@ -52,13 +67,27 @@ All steps are deterministic, auditable, and visualized in real-time.
 SentinelFlow follows an **Orchestrator / Specialist** pattern with a unified frontend-backend architecture.
 
 ### Backend (Control Plane)
-- **Orchestrator Agent** — Controls workflow sequencing and enforces governance gates
+- **Orchestrator Agent** — Controls workflow sequencing, enforces governance gates, terminates unsafe workflows
 - **Specialist Agents** — SRE, Security, and Governance agents perform parallel analysis
 - **Agent Configuration Service** — Loads agent YAML configs at runtime for dynamic behavior
 - **WebSocket Server** — Real-time state synchronization with the frontend
 - **REST API** — Governance decision submission and workflow management
+Detailed architecture is documented in .kiro/steering/architecture.md
+
+## Workflow Model
+SentinelFlow workflows are deterministic, auditable, and replayable.
+Incident
+- Parallel Analysis
+- Root Cause Synthesis
+- Governance Gate
+- Remediation Proposal
+- Verification
+- Audit & Documentation
+Governance gates cannot be skipped.
+See .kiro/steering/workflow.md for the full control loop.
 
 ### Frontend (Mission Control UI)
+The UI demonstrates **human-in-the-loop decision-making**
 - **3-Pane Dashboard** — Incoming Signal, Agent Brain, Human Handoff
 - **Real-time Visualization** — Workflow progress, agent activity, blast radius
 - **Governance Gate UI** — Mandatory human approval with decision capture
@@ -96,15 +125,20 @@ SentinelFlow/
 
 ---
 
-## Quick Start
+## Quick Start Guide
+
+This project is designed as a **local, fully simulated demo**.
+No external services, credentials, or integrations are required.
 
 ### Prerequisites
 - Node.js 18+
 - npm
 
-### Installation
-
+### Clone & Install
 ```bash
+git clone https://github.com/lakshmipillay/SentinelFlow.git
+cd SentinelFlow
+
 # Install backend dependencies
 npm install
 
@@ -145,6 +179,66 @@ Open http://localhost:3000 in your browser.
 | Unauthorized Access Attempt | Suspicious authentication patterns | Critical |
 | Container Orchestration Resource Exhaustion | Kubernetes pod scheduling failures | Medium |
 | Failed Deployment Rollback Required | Recent deployment causing errors | Low |
+
+---
+
+## Screenshots (Demo)
+
+> Screenshots below show the system running in demo mode with simulated incidents.
+
+### Landing Screen
+*Three panel UI showing Left Panel-Incoming Signal, Center Panel-Agent Brain & Workflow, Right Panel-Human Handoff & Governance.*
+
+![Landing Screen](docs/screenshots/demo-landing-screen.png)
+
+---
+
+### Incident Triggered
+*Active alert with streaming logs in the left panel.*
+
+![Incident Triggered](docs/screenshots/incident-triggered.png)
+
+---
+
+### Parallel Agent Analysis
+*Orchestrator coordinating SRE, Security, and Governance agents.*
+
+![Parallel Analysis](docs/screenshots/parallel-analysis.png)
+
+---
+
+### Governance Gate & Human Approval
+*Explicit governance decision and human-in-the-loop approval.*
+
+![Governance Gate](docs/screenshots/governance-gate.png)
+
+---
+
+### Blast Radius
+*Blast radius in the left panel.*
+
+![Blast Radius](docs/screenshots/blast-radius.png)
+
+---
+
+### Governance Gate Awaiting Approval
+*Right panel with textbox and buttons awaiting approval.*
+
+![Governance Gate Awaiting Approval](docs/screenshots/governance-approval-waiting.png)
+
+---
+
+### Governance Gate Approval Given
+*Right panel with human approval given.*
+
+![Governance Gate Approved](docs/screenshots/governance-rationale-entered.png)
+
+---
+
+### Resolution & Audit
+*Incident resolved with audit artifacts generated.*
+
+![Resolution](docs/screenshots/incident-resolved.png)
 
 ---
 
@@ -228,6 +322,21 @@ The project includes:
 - Unit tests for all services
 - Property-based tests for critical invariants
 - Integration tests for API endpoints
+
+---
+
+### MVP Scope (Intentional)
+The MVP implements a **governed incident response workflow** that:
+- Ingests an operational incident
+- Runs **parallel specialist analysis** (SRE, Security, Governance)
+- Synthesizes a **root cause assessment**
+- Applies a **governance approval gate**
+- Proposes **reversible remediation** (no execution)
+- Verifies expected recovery
+- Produces **mandatory audit artifacts**
+
+**All signals, integrations, and actions are simulated.**
+This is intentional to keep the demo reliable and the architectural intent explicit.
 
 ---
 
