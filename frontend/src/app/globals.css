@@ -1,0 +1,366 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode - not primary for Mission Control */
+    --background: #ffffff;
+    --foreground: #0f172a;
+    --panel: #f8fafc;
+    --panel-secondary: #f1f5f9;
+    --border: #e2e8f0;
+    --accent: #3b82f6;
+    --muted: #64748b;
+    --muted-foreground: #94a3b8;
+    
+    /* Status colors */
+    --status-idle: #64748b;
+    --status-analyzing: #3b82f6;
+    --status-pending: #f59e0b;
+    --status-success: #22c55e;
+    --status-error: #ef4444;
+    --status-warning: #f59e0b;
+    
+    /* Agent colors */
+    --agent-sre: #06b6d4;
+    --agent-security: #8b5cf6;
+    --agent-governance: #f59e0b;
+    
+    /* Governance decision colors */
+    --governance-approve: #22c55e;
+    --governance-restrict: #f59e0b;
+    --governance-block: #ef4444;
+  }
+
+  .dark {
+    /* Dark mode - primary for Mission Control dashboard */
+    --background: #0a0f1a;
+    --foreground: #e2e8f0;
+    --panel: #111827;
+    --panel-secondary: #1e293b;
+    --border: #334155;
+    --accent: #60a5fa;
+    --muted: #94a3b8;
+    --muted-foreground: #64748b;
+    
+    /* Status colors - slightly brighter for dark mode */
+    --status-idle: #94a3b8;
+    --status-analyzing: #60a5fa;
+    --status-pending: #fbbf24;
+    --status-success: #4ade80;
+    --status-error: #f87171;
+    --status-warning: #fbbf24;
+    
+    /* Agent colors */
+    --agent-sre: #22d3ee;
+    --agent-security: #a78bfa;
+    --agent-governance: #fbbf24;
+    
+    /* Governance decision colors */
+    --governance-approve: #4ade80;
+    --governance-restrict: #fbbf24;
+    --governance-block: #f87171;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar for Mission Control terminal logs */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--panel);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--panel);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--muted);
+  border-radius: 3px;
+}
+
+/* Terminal log styling */
+.terminal-log {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.terminal-log .error {
+  @apply text-status-error;
+}
+
+.terminal-log .warning {
+  @apply text-status-warning;
+}
+
+.terminal-log .info {
+  @apply text-status-analyzing;
+}
+
+/* AI Thinking animation */
+@keyframes thinking-dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+
+.animate-thinking::after {
+  content: '';
+  animation: thinking-dots 1.5s infinite;
+}
+
+/* Panel transitions for smooth state changes */
+.panel-transition {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Responsive 3-pane layout utilities */
+@layer utilities {
+  .mission-control-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(400px, 2fr) minmax(280px, 1fr);
+    height: 100%;
+  }
+  
+  @media (max-width: 1024px) {
+    .mission-control-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+    }
+  }
+}
+
+/* Ensure dark mode is enforced */
+html.dark body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Focus states for accessibility */
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling for log panels */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Status indicator pulse animation */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-pulse {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   LiveTerminalLogs Component Styles
+   Requirements: 14.2, 14.3, 14.4, 14.5
+   ============================================ */
+
+.live-terminal-logs {
+  @apply flex flex-col h-full overflow-hidden;
+}
+
+/* Terminal Header */
+.terminal-header {
+  @apply flex items-center justify-between px-3 py-2 text-xs flex-shrink-0;
+  border-bottom: 1px solid var(--border);
+}
+
+.terminal-title {
+  @apply text-muted font-medium;
+}
+
+.terminal-status {
+  @apply flex items-center gap-2;
+}
+
+/* Streaming Indicator with activity-responsive animation */
+.streaming-indicator {
+  @apply flex items-center gap-1.5 text-status-analyzing;
+}
+
+.streaming-dot {
+  @apply w-1.5 h-1.5 rounded-full bg-status-analyzing;
+  animation: streaming-pulse 2s ease-in-out infinite;
+}
+
+/* Activity-responsive animation speeds - Requirement 14.4, 14.5 */
+.activity-fast .streaming-dot {
+  animation: streaming-pulse 0.5s ease-in-out infinite;
+}
+
+.activity-normal .streaming-dot {
+  animation: streaming-pulse 1.5s ease-in-out infinite;
+}
+
+.activity-slow .streaming-dot {
+  animation: streaming-pulse 3s ease-in-out infinite;
+  @apply bg-status-success;
+}
+
+.activity-slow {
+  @apply text-status-success;
+}
+
+@keyframes streaming-pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+/* Resume scroll button */
+.resume-scroll-btn {
+  @apply px-2 py-0.5 text-xs rounded border cursor-pointer transition-colors;
+  color: var(--accent);
+  background-color: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.resume-scroll-btn:hover {
+  background-color: rgba(96, 165, 250, 0.2);
+}
+
+/* Terminal Container - Monospace formatting (Requirement 14.2) */
+.terminal-container {
+  @apply flex-1 overflow-y-auto overflow-x-hidden p-2 min-h-0;
+  font-family: var(--font-mono), ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  background-color: var(--panel-secondary);
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--panel-secondary);
+}
+
+.terminal-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terminal-container::-webkit-scrollbar-track {
+  background: var(--panel-secondary);
+}
+
+.terminal-container::-webkit-scrollbar-thumb {
+  background-color: var(--muted);
+  border-radius: 3px;
+}
+
+/* Log Line Base Styles */
+.log-line {
+  @apply flex items-start gap-2 py-0.5 px-1 rounded;
+  word-break: break-word;
+}
+
+.log-line:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Error Line Highlighting - Requirement 14.3 */
+.log-line.error-highlight {
+  @apply border-l-2 border-status-error;
+  background-color: rgba(248, 113, 113, 0.1);
+  margin-left: -2px;
+  padding-left: calc(0.25rem + 2px);
+}
+
+/* Log Timestamp */
+.log-timestamp {
+  @apply text-muted-foreground flex-shrink-0;
+  min-width: 60px;
+}
+
+/* Log Level Badge */
+.log-level-badge {
+  @apply px-1 py-0 rounded text-center flex-shrink-0;
+  font-size: 0.65rem;
+  min-width: 45px;
+}
+
+/* Log Source */
+.log-source {
+  @apply text-agent-security flex-shrink-0;
+}
+
+/* Log Message */
+.log-message {
+  @apply flex-1;
+  word-break: break-word;
+}
+
+/* Log Level Specific Styles - Syntax Highlighting (Requirement 14.2, 14.3) */
+.log-line.log-error .log-message {
+  @apply text-status-error font-medium;
+}
+
+.log-line.log-warning .log-message {
+  @apply text-status-warning;
+}
+
+.log-line.log-info .log-message {
+  @apply text-status-analyzing;
+}
+
+.log-line.log-debug .log-message {
+  @apply text-muted-foreground;
+}
+
+/* Terminal Empty State */
+.terminal-empty {
+  @apply flex flex-col items-center justify-center h-full text-muted py-8;
+}
+
+.terminal-empty-icon {
+  @apply text-2xl mb-2 opacity-50;
+}
+
+.terminal-empty-text {
+  @apply text-sm;
+}
+
+/* Terminal Footer */
+.terminal-footer {
+  @apply flex items-center justify-between px-3 py-1.5 text-xs text-muted-foreground flex-shrink-0;
+  border-top: 1px solid var(--border);
+  background-color: var(--panel);
+}
+
+.log-count {
+  @apply text-muted;
+}
+
+.scroll-paused {
+  @apply text-status-warning;
+}
