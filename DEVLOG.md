@@ -180,7 +180,7 @@ Kiro’s steering and prompt model significantly reduced rework by enforcing con
 
 - **Deterministic Outputs**: Enforced structured JSON/YAML outputs across all agents to eliminate ambiguity and enable replayability and audit.
 
-### Kiro IDE Usage Highlights
+## Kiro IDE Usage Highlights
 
 - **Steering Documents as System Contracts**: Used Kiro steering documents to encode global rules, architecture, governance boundaries, and coding standards rather than relying on implicit conventions.
 
@@ -188,9 +188,63 @@ Kiro’s steering and prompt model significantly reduced rework by enforcing con
 
 - **IDE-Driven Iteration**: Iteratively refined prompts, agent YAMLs, and documentation using the Kiro IDE to validate consistency between architecture, workflow, and outputs.
 
-** Process Transparency**: Used prompts to update and validate DEVLOG.md, ensuring that development decisions and iterations were explicitly recorded.
+- **Process Transparency**: Used prompts to update and validate DEVLOG.md, ensuring that development decisions and iterations were explicitly recorded.
 
-### Challenges & Solutions
+
+## Kiro Agent Usage Highlights
+
+SentinelFlow makes **explicit, intentional use of Kiro Agents** as bounded system components rather than generic AI helpers.
+
+### **Agent Definitions as Contracts**
+Defined four distinct Kiro agents using YAML:
+- Orchestrator Agent
+- SRE Agent
+- Security Agent
+- Governance Agent
+
+Each agent definition encodes:
+- Role and responsibility
+- Explicit constraints (analysis-only, no execution, no approval)
+- Authority boundaries enforced at runtime
+Agent YAMLs are treated as system contracts, not configuration metadata.
+
+### Orchestrator Agent (Primary Control Agent)
+
+Implemented a dedicated Orchestrator Agent responsible solely for:
+- Sequencing workflow steps
+- Spawning specialist agents in parallel
+- Enforcing governance gates
+- Terminating unsafe or incomplete workflows
+The Orchestrator performs no domain analysis and no remediation, ensuring predictable and testable control flow. This demonstrates intentional use of Kiro agents for workflow control, not reasoning.
+
+### Specialist Agents (Parallel, Read-Only)
+
+Implemented SRE, Security, and Governance agents as:
+- Analysis-only
+- Deterministic
+- Non-communicating with each other
+
+Each agent:
+- Receives scoped context from the Orchestrator
+- Produces structured JSON output
+- Cannot influence workflow progression directly
+
+Parallel agent execution is used to model real-world specialist teams, while preserving central authority.
+
+### Governance Agent as Architectural Boundary
+
+The Governance Agent is used in two distinct ways:
+- Parallel governance analysis (read-only, no decisions)
+- Explicit governance gate (human-approved decision point)
+
+This separation prevents:
+- Hidden policy enforcement
+- Implicit approvals
+- Agent-driven execution
+
+Governance is enforced through agent boundaries, not post-processing.
+
+## Challenges & Solutions
 
 - **Avoiding Over-Autonomy**: 
   Challenge: Preventing agents from implicitly proposing or executing actions.
@@ -204,7 +258,7 @@ Kiro’s steering and prompt model significantly reduced rework by enforcing con
   Challenge: Making the system judge-readable without overwhelming detail.
   Solution: Structured documentation with explicit sections, schemas, and diagrams while keeping workflows deterministic and bounded.
 
-### Impact
+## Impact
 
 - **Predictable Behavior**: Same inputs always produce the same outputs.
 - **Audit-Ready**: Every decision is traceable and explainable.

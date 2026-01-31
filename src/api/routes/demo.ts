@@ -6,6 +6,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { DemoModeManager } from '../../demo/DemoModeManager';
+import { AuditArtifactService } from '../../services/AuditArtifactService';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -14,6 +15,9 @@ import {
 import { DemoSchemas } from '../validation/demo-schemas';
 import { ApiErrorCode } from '../types';
 import Joi from 'joi';
+
+// Create a shared audit service instance for demo audit logging
+const demoAuditService = new AuditArtifactService('AUDIT.md');
 
 /**
  * Create Joi validation middleware for demo routes
@@ -478,6 +482,50 @@ export function createDemoRoutes(demoManager: DemoModeManager): Router {
       }
     }
   );
+
+  /**
+   * POST /api/demo/log-audit
+   * Log a demo audit event to AUDIT.md
+   * Simple endpoint for frontend to log audit events during local demo simulation
+   */
+  router.post('/log-audit', async (req: Request, res: Response) => {
+    try {
+      const { workflowId, eventType, actor, details } = req.body;
+
+      if (!workflowId || !eventType) {
+        res.status(400).json(createErrorResponse(
+          ApiErrorCode.VALIDATION_ERROR,
+          'workflowId and eventType are required'
+        ));
+        return;
+      }
+
+      // Log to AUDIT.md using the shared audit service
+      await demoAuditService.generateAuditEvent(
+        workflowId,
+        eventType,
+        actor || 'demo-frontend',
+        {
+          ...details,
+          demoMode: true,
+          source: 'frontend-simulation'
+        }
+      );
+
+      res.json(createSuccessResponse({
+        message: 'Audit event logged successfully',
+        workflowId,
+        eventType,
+        demoMode: true
+      }));
+    } catch (error) {
+      console.error('Error logging demo audit event:', error);
+      res.status(500).json(createErrorResponse(
+        ApiErrorCode.INTERNAL_ERROR,
+        'Failed to log audit event'
+      ));
+    }
+  });
 
   return router;
 }

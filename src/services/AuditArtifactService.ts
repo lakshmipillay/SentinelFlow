@@ -276,6 +276,8 @@ export class AuditArtifactService extends EventEmitter {
       systemMetrics?: any;
     }
   ): Promise<EnhancedAuditEvent> {
+    console.log(`[AuditArtifactService] generateAuditEvent called - workflowId: ${workflowId}, eventType: ${eventType}, actor: ${actor}`);
+    
     // Ensure atomic chain operations using mutex
     const currentMutex = this.chainMutex.get(workflowId) || Promise.resolve();
     const newMutex = currentMutex.then(async () => {
@@ -525,14 +527,18 @@ export class AuditArtifactService extends EventEmitter {
   ): Promise<void> {
     const devlogEntry = this.createDevlogEntry(auditEvent, contextData);
     
+    console.log(`[AuditArtifactService] Writing audit entry to ${this.devlogPath} for workflow ${auditEvent.workflowId}, event: ${auditEvent.eventType}`);
+    
     try {
       // Read existing DEVLOG content
       let existingContent = '';
       try {
         const fileContent = await fs.readFile(this.devlogPath, 'utf-8');
         existingContent = fileContent || '';
+        console.log(`[AuditArtifactService] Read existing content from ${this.devlogPath}, length: ${existingContent.length}`);
       } catch (error) {
         // File doesn't exist, will create new one
+        console.log(`[AuditArtifactService] File ${this.devlogPath} not found, creating initial content`);
         existingContent = this.createInitialDevlogContent();
       }
 
@@ -548,14 +554,17 @@ export class AuditArtifactService extends EventEmitter {
         
         updatedContent = beforeAudit + auditSectionMarker + auditSection + 
           '\n' + this.formatDevlogEntry(devlogEntry);
+        console.log(`[AuditArtifactService] Appending to existing audit section`);
       } else {
         // Add new audit section
         updatedContent = existingContent + '\n\n' + auditSectionMarker + '\n\n' +
           this.formatDevlogEntry(devlogEntry);
+        console.log(`[AuditArtifactService] Creating new audit section`);
       }
 
       // Write updated content
       await fs.writeFile(this.devlogPath, updatedContent, 'utf-8');
+      console.log(`[AuditArtifactService] Successfully wrote ${updatedContent.length} bytes to ${this.devlogPath}`);
       
       // Emit DEVLOG update event
       this.emit('devlogUpdated', {
@@ -565,7 +574,7 @@ export class AuditArtifactService extends EventEmitter {
       });
 
     } catch (error) {
-      console.error('Failed to update AUDIT.md:', error);
+      console.error(`[AuditArtifactService] Failed to update ${this.devlogPath}:`, error);
       // Don't throw - audit should not fail workflow
     }
   }

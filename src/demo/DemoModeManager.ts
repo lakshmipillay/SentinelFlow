@@ -874,6 +874,8 @@ export class DemoModeManager extends EventEmitter {
     this.stateManager.addAuditEvent(auditEvent);
     this.emit('demoAuditEvent', auditEvent);
     
+    console.log(`[DemoModeManager] generateDemoAuditEvent called - eventType: ${eventType}, workflowId: ${workflowId}`);
+    
     // Also write to AUDIT.md for persistent audit trail
     this.auditArtifactService.generateAuditEvent(
       workflowId,
@@ -884,8 +886,10 @@ export class DemoModeManager extends EventEmitter {
         ...details,
         demoMode: true
       }
-    ).catch(err => {
-      console.error('Failed to write demo audit event to AUDIT.md:', err);
+    ).then(() => {
+      console.log(`[DemoModeManager] Successfully wrote audit event to AUDIT.md for ${eventType}`);
+    }).catch(err => {
+      console.error('[DemoModeManager] Failed to write demo audit event to AUDIT.md:', err);
     });
   }
 

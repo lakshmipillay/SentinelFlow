@@ -550,6 +550,28 @@ export class SentinelFlowApiClient {
   }> {
     return this.request('GET', '/version');
   }
+
+  // ============================================
+  // Demo Audit Logging
+  // ============================================
+
+  /**
+   * Log a demo audit event to AUDIT.md
+   * Used by frontend during local demo simulation to persist audit trail
+   */
+  async logDemoAudit(
+    workflowId: string,
+    eventType: string,
+    actor: string,
+    details: Record<string, unknown>
+  ): Promise<{ message: string; workflowId: string; eventType: string }> {
+    return this.request('POST', '/demo/log-audit', {
+      workflowId,
+      eventType,
+      actor,
+      details
+    });
+  }
 }
 
 /**

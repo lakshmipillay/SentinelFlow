@@ -38,6 +38,17 @@ import {
 } from '@/components';
 import { WorkflowState, GovernanceDecisionType, GovernanceDecision, WorkflowInstance, ActiveAlert, AgentOutput, GovernanceApprovalRequest } from '@/types/workflow';
 import { Shield, Activity, AlertTriangle, Wifi, WifiOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { getApiClient } from '@/services/api';
+
+/**
+ * Helper to log audit events to backend AUDIT.md
+ * Fire-and-forget - doesn't block demo flow
+ */
+function logAuditEvent(workflowId: string, eventType: string, actor: string, details: Record<string, unknown>) {
+  getApiClient().logDemoAudit(workflowId, eventType, actor, details).catch(err => {
+    console.warn('[Audit] Failed to log audit event:', err);
+  });
+}
 
 /**
  * Header component with connection status and demo controls
@@ -103,6 +114,13 @@ function Header() {
       // Set initial workflow
       setWorkflow(workflow);
 
+      // Log audit event for demo start
+      logAuditEvent(workflowId, 'state_transition', 'orchestrator', {
+        scenarioType,
+        toState: WorkflowState.IDLE,
+        event: 'demo_started'
+      });
+
       // Add initial log
       addLog({
         timestamp: new Date().toISOString(),
@@ -123,6 +141,13 @@ function Header() {
       workflow.timestamp = new Date().toISOString();
       workflow.alert = alert;
       setWorkflow({ ...workflow });
+
+      // Log audit event for incident ingestion
+      logAuditEvent(workflowId, 'state_transition', 'orchestrator', {
+        fromState: WorkflowState.IDLE,
+        toState: WorkflowState.INCIDENT_INGESTED,
+        alert: { service: alert.service, severity: alert.severity, metric: alert.metric }
+      });
 
       addLog({
         timestamp: new Date().toISOString(),
@@ -192,6 +217,14 @@ function Header() {
         source: 'sre-agent'
       });
 
+      // Log audit event for SRE agent completion
+      logAuditEvent(workflowId, 'agent_output', 'sre-agent', {
+        agentName: 'sre-agent',
+        confidenceLevel: sreOutput.confidenceLevel,
+        skillsUsed: sreOutput.skillsUsed,
+        findingsSummary: sreOutput.findings.summary
+      });
+
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Complete Security agent analysis
@@ -213,6 +246,14 @@ function Header() {
         source: 'security-agent'
       });
 
+      // Log audit event for Security agent completion
+      logAuditEvent(workflowId, 'agent_output', 'security-agent', {
+        agentName: 'security-agent',
+        confidenceLevel: securityOutput.confidenceLevel,
+        skillsUsed: securityOutput.skillsUsed,
+        findingsSummary: securityOutput.findings.summary
+      });
+
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Complete Governance agent analysis
@@ -232,6 +273,14 @@ function Header() {
         level: 'info',
         message: `Governance Agent completed analysis with ${Math.round(governanceOutput.confidenceLevel * 100)}% confidence`,
         source: 'governance-agent'
+      });
+
+      // Log audit event for Governance agent completion
+      logAuditEvent(workflowId, 'agent_output', 'governance-agent', {
+        agentName: 'governance-agent',
+        confidenceLevel: governanceOutput.confidenceLevel,
+        skillsUsed: governanceOutput.skillsUsed,
+        findingsSummary: governanceOutput.findings.summary
       });
 
       // Transition to RCA_COMPLETE
@@ -263,6 +312,14 @@ function Header() {
         level: 'warning',
         message: `Governance approval required - Risk Level: ${governanceRequest.riskLevel}`,
         source: 'governance-agent'
+      });
+
+      // Log audit event for governance gate activation
+      logAuditEvent(workflowId, 'state_transition', 'orchestrator', {
+        fromState: WorkflowState.RCA_COMPLETE,
+        toState: WorkflowState.GOVERNANCE_PENDING,
+        riskLevel: governanceRequest.riskLevel,
+        event: 'governance_gate_activated'
       });
 
     } catch (error) {
@@ -556,12 +613,22 @@ function RightPanel() {
       message: `Governance decision: ${decision.toUpperCase()} - ${rationale}`,
       source: 'human'
     });
+
+    // Log audit event for governance decision
+    if (state.currentWorkflow?.workflowId) {
+      logAuditEvent(state.currentWorkflow.workflowId, 'governance_decision', 'human', {
+        decision,
+        rationale,
+        approver: fullDecision?.approver,
+        restrictions: fullDecision?.restrictions
+      });
+    }
     
     // Submit the decision to update workflow state
     if (fullDecision) {
       submitGovernanceDecision(fullDecision);
     }
-  }, [addLog, submitGovernanceDecision]);
+  }, [addLog, submitGovernanceDecision, state.currentWorkflow?.workflowId]);
   
   // Default decision maker for demo
   // Role must be one of: senior-sre, security-lead, compliance-officer, engineering-manager
