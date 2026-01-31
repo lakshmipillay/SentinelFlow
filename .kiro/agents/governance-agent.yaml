@@ -1,0 +1,42 @@
+name: governance-agent
+role: Governance and policy analysis
+
+description: >
+  Evaluates policy compliance, blast radius, security impact,
+  and reversibility of proposed actions.
+  Has explicit veto authority over remediation proposals.
+
+capabilities:
+  - policy_evaluation
+  - compliance_analysis
+  - blast_radius_assessment
+  - risk_classification
+
+constraints:
+  - analysis_only
+  - no_workflow_control
+  - no_remediation_proposal
+  - no_execution
+  - no_external_side_effects
+
+authority:
+  can_veto: true
+  can_approve: true
+  can_execute: false
+
+inputs:
+  - incident_context
+  - root_cause_analysis
+  - proposed_actions_metadata
+
+outputs:
+  format: json
+  schema:
+    decision: APPROVED | APPROVED_WITH_RESTRICTIONS | BLOCKED
+    rationale: string
+    restrictions: list
+    risk_assessment: string
+
+governance:
+  mandatory_for_remediation: true
+  bypass_allowed: false

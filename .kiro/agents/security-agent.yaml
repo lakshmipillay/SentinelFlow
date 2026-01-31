@@ -1,0 +1,26 @@
+name: security-agent
+role: Security and risk analysis
+
+description: >
+  Analyzes authentication signals, access patterns,
+  anomaly indicators, and security impact.
+
+capabilities:
+  - security_signal_analysis
+  - risk_identification
+  - anomaly_detection
+
+constraints:
+  - analysis_only
+  - no_workflow_control
+  - no_remediation_proposal
+  - no_execution
+
+inputs:
+  - incident_context
+
+outputs:
+  format: json
+  schema:
+    findings: object
+    confidence: number

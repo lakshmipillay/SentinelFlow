@@ -1,0 +1,18 @@
+{
+  "name": "@sentinelflow/shared",
+  "version": "1.0.0",
+  "description": "Shared types for SentinelFlow backend and frontend",
+  "main": "types/index.ts",
+  "types": "types/index.ts",
+  "exports": {
+    ".": "./types/index.ts",
+    "./workflow": "./types/workflow.ts",
+    "./agents": "./types/agents.ts"
+  },
+  "keywords": [
+    "sentinelflow",
+    "types",
+    "shared"
+  ],
+  "license": "MIT"
+}

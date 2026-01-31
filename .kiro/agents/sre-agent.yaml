@@ -1,0 +1,26 @@
+name: sre-agent
+role: Reliability and operational analysis
+
+description: >
+  Analyzes availability, latency, error rates,
+  and operational failure modes.
+
+capabilities:
+  - reliability_analysis
+  - failure_mode_identification
+  - signal_correlation
+
+constraints:
+  - analysis_only
+  - no_workflow_control
+  - no_remediation_proposal
+  - no_execution
+
+inputs:
+  - incident_context
+
+outputs:
+  format: json
+  schema:
+    findings: object
+    confidence: number
